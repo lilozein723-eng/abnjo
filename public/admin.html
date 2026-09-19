@@ -302,6 +302,19 @@ async function getUsersFromStorage(){
   }
 }
 
+async function updateApplicationStatus(id, status){
+  const response = await fetch('/api/applications/' + encodeURIComponent(String(id)), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status })
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || !result.ok) {
+    throw new Error(result.message || 'تعذر تحديث حالة الطلب');
+  }
+  return result.application;
+}
+
 // LOCK
 const li=document.getElementById('li');
 document.getElementById('lbtn').addEventListener('click',unlock);
@@ -479,6 +492,8 @@ async function renderTable(){
       <td style="font-size:13px">${u.address}</td>
       <td><div class="acts">
         <div class="ddw" id="dw${u.id}"><button class="bdet" data-id="${u.id}">التفاصيل ▾</button></div>
+        <button class="dd-a table-status" data-id="${u.id}" data-status="accepted">✓ قبول</button>
+        <button class="dd-r table-status" data-id="${u.id}" data-status="rejected">✕ رفض</button>
         <button class="bred" data-ph="${u.phone}">إعادة التوجيه</button>
       </div></td>`;
     tb.appendChild(tr);
@@ -487,7 +502,7 @@ async function renderTable(){
   tb.querySelectorAll('.bdet').forEach(btn=>{
     btn.addEventListener('click',e=>{
       e.stopPropagation();
-      const id=+btn.dataset.id;
+      const id=btn.dataset.id;
       const wrap=document.getElementById('dw'+id);
       if (openDD && openDD !== wrap) {
         openDD.remove();
@@ -500,7 +515,7 @@ async function renderTable(){
         return;
       }
 
-      const u=USERS.find(x=>x.id===id);
+      const u=USERS.find(x=>String(x.id)===String(id));
       const s=getS();
       const dd=document.createElement('div');
       dd.className='dd';
@@ -568,6 +583,20 @@ async function renderTable(){
 
   tb.querySelectorAll('.bred').forEach(btn=>{
     btn.addEventListener('click',()=>alert('إعادة التوجيه: '+btn.dataset.ph));
+  });
+
+  tb.querySelectorAll('.table-status').forEach(btn=>{
+    btn.addEventListener('click', async event => {
+      event.stopPropagation();
+      btn.disabled = true;
+      try {
+        await updateApplicationStatus(btn.dataset.id, btn.dataset.status);
+        await renderTable();
+      } catch (error) {
+        btn.disabled = false;
+        alert(error.message || 'تعذر تحديث حالة الطلب');
+      }
+    });
   });
 }
 

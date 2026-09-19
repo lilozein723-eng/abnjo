@@ -144,6 +144,42 @@ http.createServer((req, res) => {
     return;
   }
 
+  if (req.method === 'POST' && url.pathname.startsWith('/api/applications/')) {
+    const applicationId = decodeURIComponent(url.pathname.slice('/api/applications/'.length));
+    let raw = '';
+    req.on('data', chunk => { raw += chunk; });
+    req.on('end', () => {
+      try {
+        const body = raw ? JSON.parse(raw) : {};
+        const status = String(body.status || '').trim();
+        if (!['accepted', 'rejected'].includes(status)) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+          return res.end(JSON.stringify({ ok: false, message: 'Invalid application status' }));
+        }
+
+        const applications = readApplications();
+        const index = applications.findIndex(item => String(item.id) === applicationId);
+        if (index === -1) {
+          res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' });
+          return res.end(JSON.stringify({ ok: false, message: 'Application not found' }));
+        }
+
+        applications[index] = {
+          ...applications[index],
+          status,
+          statusUpdatedAt: new Date().toISOString(),
+        };
+        writeApplications(applications);
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ ok: true, application: applications[index] }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ ok: false, message: 'Invalid request body' }));
+      }
+    });
+    return;
+  }
+
   let urlPath = decodeURIComponent(url.pathname);
   if (urlPath === '/') urlPath = '/index.html';
   if (!path.extname(urlPath)) urlPath += '.html';
