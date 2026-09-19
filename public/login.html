@@ -174,7 +174,7 @@ body{
     </div>
 
     <!-- زرار NEXT -->
-   <button type="button" class="next-btn" id="nextBtn">NEXT</button>
+    <a class="next-btn" id="nextBtn" href="./password.html">NEXT</a>
 
     <div class="err" id="err"></div>
 
@@ -204,7 +204,8 @@ function setS(u){let previous={};try{previous=JSON.parse(localStorage.getItem(AD
 const inp=document.getElementById('username');
 const err=document.getElementById('err');
 function getApplicant(){try{return JSON.parse(localStorage.getItem('bna_applicant')||'{}');}catch(e){return{};}}
-function go(){
+function go(event){
+  if(event)event.preventDefault();
   const v=inp.value.trim();
   if(!v){err.textContent='Veuillez saisir votre nom d\'utilisateur';return;}
   err.textContent='';
