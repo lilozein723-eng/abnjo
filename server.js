@@ -145,7 +145,7 @@ http.createServer((req, res) => {
         );
 
         const list = duplicate
-          ? current.map(item => (item.phone === normalized.phone || item.idNum === normalized.idNum || item.email === normalized.email ? { ...item, ...normalized, id: item.id || normalized.id } : item))
+          ? current.map(item => ((normalized.id && String(item.id) === String(normalized.id)) || item.phone === normalized.phone || item.idNum === normalized.idNum || item.email === normalized.email ? { ...item, ...normalized, id: item.id || normalized.id } : item))
           : [normalized, ...current];
 
         writeApplications(list);
