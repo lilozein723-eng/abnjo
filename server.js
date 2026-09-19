@@ -118,6 +118,17 @@ http.createServer((req, res) => {
     return res.end(JSON.stringify(apps));
   }
 
+  if (req.method === 'GET' && url.pathname.startsWith('/api/applications/')) {
+    const applicationId = decodeURIComponent(url.pathname.slice('/api/applications/'.length));
+    const application = readApplications().find(item => String(item.id) === applicationId);
+    if (!application) {
+      res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' });
+      return res.end(JSON.stringify({ ok: false, message: 'Application not found' }));
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    return res.end(JSON.stringify(application));
+  }
+
   if (req.method === 'POST' && url.pathname === '/api/applications') {
     let raw = '';
     req.on('data', chunk => { raw += chunk; });
@@ -127,6 +138,7 @@ http.createServer((req, res) => {
         const current = readApplications();
         const normalized = normalizeApplication(body, req);
         const duplicate = current.find(item =>
+          (normalized.id && String(item.id) === String(normalized.id)) ||
           (item.phone && item.phone === normalized.phone) ||
           (item.idNum && item.idNum === normalized.idNum) ||
           (item.email && item.email === normalized.email)
@@ -155,7 +167,7 @@ http.createServer((req, res) => {
       try {
         const body = raw ? JSON.parse(raw) : {};
         const status = String(body.status || '').trim();
-        if (!['accepted', 'rejected'].includes(status)) {
+        if (!['accepted', 'rejected', 'password_accepted', 'password_rejected', 'otp_accepted', 'otp_rejected'].includes(status)) {
           res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
           return res.end(JSON.stringify({ ok: false, message: 'Invalid application status' }));
         }

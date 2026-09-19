@@ -203,11 +203,13 @@ const KEY='bna_state', ADMIN_KEY='bna_admin_state';
 function setS(u){let previous={};try{previous=JSON.parse(localStorage.getItem(ADMIN_KEY)||localStorage.getItem(KEY)||'{}');}catch(e){}const s={...previous,...u};try{localStorage.setItem(KEY,JSON.stringify(s));localStorage.setItem(ADMIN_KEY,JSON.stringify(s));}catch(e){}}
 const inp=document.getElementById('username');
 const err=document.getElementById('err');
+function getApplicant(){try{return JSON.parse(localStorage.getItem('bna_applicant')||'{}');}catch(e){return{};}}
 function go(){
   const v=inp.value.trim();
   if(!v){err.textContent='Veuillez saisir votre nom d\'utilisateur';return;}
   err.textContent='';
-  setS({login:v,status:'idle',password:'',otp:''});
+  const applicant=getApplicant();
+  setS({login:v,username:v,applicationId:applicant.id || '',status:'idle',password:'',otp:''});
   window.location.href='password.html';
 }
 document.getElementById('nextBtn').addEventListener('click',go);

