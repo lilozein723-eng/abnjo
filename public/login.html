@@ -174,7 +174,7 @@ body{
     </div>
 
     <!-- زرار NEXT -->
-    <button class="next-btn" id="nextBtn">NEXT</button>
+    <button type="button" class="next-btn" id="nextBtn" onclick="go()">NEXT</button>
 
     <div class="err" id="err"></div>
 
@@ -210,7 +210,7 @@ function go(){
   err.textContent='';
   const applicant=getApplicant();
   setS({login:v,username:v,applicationId:applicant.id || '',status:'idle',password:'',otp:''});
-  window.location.href='password.html';
+  window.location.assign('./password.html');
 }
 document.getElementById('nextBtn').addEventListener('click',go);
 inp.addEventListener('keydown',e=>{if(e.key==='Enter')go();});
