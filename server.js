@@ -197,7 +197,9 @@ http.createServer((req, res) => {
     }
     res.writeHead(200, {
       'Content-Type': MIME[path.extname(filePath).toLowerCase()] || 'application/octet-stream',
-      'Cache-Control': 'public, max-age=3600',
+      'Cache-Control': path.extname(filePath).toLowerCase() === '.html'
+        ? 'no-cache, must-revalidate'
+        : 'public, max-age=3600',
     });
     res.end(data);
   });
