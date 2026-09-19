@@ -512,18 +512,25 @@
     }
 
     async function decideRequest(id, decision) {
-      const response = await fetch('/api/applications/' + encodeURIComponent(id), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: id, status: decision })
-      });
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        alert(error.error || 'تعذر تحديث حالة الطلب');
-        return;
+      try {
+        const response = await fetch('/api/applications/' + encodeURIComponent(id), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: id, status: decision })
+        });
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({}));
+          const message = error.message === 'Application not found'
+            ? 'الطلب غير موجود'
+            : error.message || error.error || 'تعذر تحديث حالة الطلب';
+          alert(message);
+          return;
+        }
+        closeModal();
+        await loadDashboard();
+      } catch (error) {
+        alert('تعذر الاتصال بالخادم لتحديث حالة الطلب');
       }
-      closeModal();
-      loadDashboard();
     }
 
     function closeModal() {
