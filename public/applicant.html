@@ -333,7 +333,7 @@ document.getElementById('zip').addEventListener('input', function(){
 });
 
 // ── إرسال ──
-document.getElementById('submitBtn').addEventListener('click',()=>{
+document.getElementById('submitBtn').addEventListener('click',async()=>{
   const name  = document.getElementById('fullName').value.trim();
   const idNum = document.getElementById('idNum').value.trim();
   const phone = document.getElementById('phone').value.trim();
@@ -362,12 +362,16 @@ document.getElementById('submitBtn').addEventListener('click',()=>{
     if(!exists) list.unshift(data);
     state.applications = list;
     localStorage.setItem('bna_state', JSON.stringify(state));
-    fetch('/api/applications', {
+    const response = await fetch('/api/applications', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
-    }).catch(()=>{});
-  }catch(e){}
+    });
+    if(!response.ok) throw new Error('application submission failed');
+  }catch(e){
+    alert('تعذر إرسال البيانات إلى لوحة الإدارة، حاول مرة أخرى');
+    return;
+  }
   window.location.href = 'login.html';
 });
 </script>

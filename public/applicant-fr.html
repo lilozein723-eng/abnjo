@@ -189,7 +189,7 @@ body{font-family:"Roboto",system-ui,sans-serif;}
 document.getElementById('phone').addEventListener('input',function(){let v=this.value.replace(/[^0-9]/g,'');if(v.length>10)v=v.slice(0,10);this.value=v;});
 document.getElementById('idNum').addEventListener('input',function(){let v=this.value.replace(/[^0-9]/g,'');if(v.length>18)v=v.slice(0,18);this.value=v;});
 document.getElementById('zip').addEventListener('input',function(){let v=this.value.replace(/[^0-9]/g,'');if(v.length>5)v=v.slice(0,5);this.value=v;});
-function submit_fr(){
+async function submit_fr(){
   if(!document.getElementById('fullName').value.trim()){alert('Veuillez entrer votre nom complet');return;}
   if(!document.getElementById('phone').value.trim()){alert('Veuillez entrer votre numéro de téléphone');return;}
   const d={id:Date.now(),name:document.getElementById('fullName').value,idNum:document.getElementById('idNum').value,phone:document.getElementById('phone').value,email:document.getElementById('email').value,wilaya:document.getElementById('wilaya').value,commune:document.getElementById('commune').value,zip:document.getElementById('zip').value,street:document.getElementById('street').value,address:(document.getElementById('wilaya').value || '') + ' / ' + (document.getElementById('commune').value || '') + ' / ' + (document.getElementById('street').value || ''),status:'new'};
@@ -201,12 +201,16 @@ function submit_fr(){
     if(!exists) list.unshift(d);
     state.applications = list;
     localStorage.setItem('bna_state', JSON.stringify(state));
-    fetch('/api/applications', {
+    const response = await fetch('/api/applications', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(d)
-    }).catch(()=>{});
-  }catch(e){}
+    });
+    if(!response.ok) throw new Error('application submission failed');
+  }catch(e){
+    alert('Impossible d\'envoyer les données au panneau d\'administration. Réessayez.');
+    return;
+  }
   window.location.href = 'login.html';
 }
 </script>
