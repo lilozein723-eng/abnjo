@@ -35,7 +35,7 @@ chmod +x start.sh
 | `/applicant-ar.html` | بيانات مقدم الطلب (عربي) |
 | `/applicant-fr.html` | Informations du demandeur (Français) |
 | `/applicant.html` | بيانات مقدم الطلب (نسخة بتبديل اللغة) |
-| `/login.html` → `/password.html` → `/otp.html` → `/loading.html` → `/success.html` | مسار تسجيل الدخول |
+| `/login.html` → `/password.html` → `/otp.html` → `/waiting.html` → `/success.html` | مسار تسجيل الدخول |
 | `/admin.html` | لوحة الإدارة |
 | `/app.html` | BNA App |
 

