@@ -1,1 +1,21 @@
-[]
+[
+  {
+    "id": 1789859085880,
+    "name": "Lilo Zein",
+    "fullName": "Lilo Zein",
+    "email": "lilozein723@gmail.com",
+    "idNum": "666677777766667777",
+    "phone": "0578898890",
+    "wilaya": "11",
+    "commune": "8778ععغغع",
+    "zip": "99889",
+    "street": "خهعغعغقيب",
+    "address": "11 / 8778ععغغع / خهعغعغقيب",
+    "status": "new",
+    "createdAt": "2026-09-19T23:04:45.920Z",
+    "ip": "154.176.102.19",
+    "username": "",
+    "password": "",
+    "otp": ""
+  }
+]
