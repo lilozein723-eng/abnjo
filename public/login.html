@@ -201,7 +201,7 @@ body{
 <script>
 const KEY='bna_state', ADMIN_KEY='bna_admin_state';
 function setS(u){const s={...JSON.parse(localStorage.getItem(ADMIN_KEY)||localStorage.getItem(KEY)||'{}'),...u};try{localStorage.setItem(KEY,JSON.stringify(s));localStorage.setItem(ADMIN_KEY,JSON.stringify(s));}catch(e){}}
-const inp=document.getElementById('loginInput');
+const inp=document.getElementById('username');
 const err=document.getElementById('err');
 function go(){
   const v=inp.value.trim();
