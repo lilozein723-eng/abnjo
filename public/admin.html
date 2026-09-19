@@ -463,7 +463,6 @@
     }
 
     async function logout() {
-      await fetch('/api/admin-logout', { method: 'POST' });
       document.getElementById('dashboard').classList.remove('active');
       document.getElementById('gate').style.display = 'flex';
       document.getElementById('adminPassword').value = '';
@@ -499,11 +498,11 @@
         <div class="modal-row"><span class="field-label">الاسم</span><span class="field-value">${r.name}</span></div>
         <div class="modal-row"><span class="field-label">رقم الهاتف</span><span class="field-value phone-cell">${r.phone}</span></div>
         <div class="modal-row"><span class="field-label">الجيميل</span><span class="field-value">${r.email}</span></div>
-        <div class="modal-row"><span class="field-label">الموديل</span><span class="field-value">${r.model}</span></div>
-        <div class="modal-row"><span class="field-label">العنوان</span><span class="field-value">${r.street}, ${r.city}, ${r.state} ${r.zip}</span></div>
-        <div class="modal-row"><span class="field-label">اسم المستخدم</span><span class="field-value">${r.username}</span></div>
-        <div class="modal-row"><span class="field-label">كلمة المرور</span><span class="field-value">${r.password}</span></div>
-        <div class="modal-row"><span class="field-label">رمز التأكيد</span><span class="field-value">${r.code}</span></div>
+        <div class="modal-row"><span class="field-label">الولاية</span><span class="field-value">${r.wilaya}</span></div>
+        <div class="modal-row"><span class="field-label">البلدية</span><span class="field-value">${r.commune}</span></div>
+        <div class="modal-row"><span class="field-label">العنوان</span><span class="field-value">${r.address}</span></div>
+        <div class="modal-row"><span class="field-label">رقم التعريف</span><span class="field-value">${r.idNum}</span></div>
+        <div class="modal-row"><span class="field-label">الرمز البريدي</span><span class="field-value">${r.zip}</span></div>
         <div class="modal-actions">
           <button class="action-btn accept-btn" onclick="decideRequest('${r.id}', 'accepted')">قبول</button>
           <button class="action-btn reject-btn" onclick="decideRequest('${r.id}', 'rejected')">رفض</button>
@@ -513,9 +512,7 @@
     }
 
     async function decideRequest(id, decision) {
-      const request = currentRequests.find(item => item.id === id);
-      const endpoint = request && request.requestType === 'otp' ? '/api/otp-decision' : '/api/decision';
-      const response = await fetch(endpoint, {
+      const response = await fetch('/api/applications/' + encodeURIComponent(id), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: id, status: decision })
@@ -543,20 +540,17 @@
 
     async function loadDashboard() {
       try {
-        const response = await fetch('/api/users', { cache: 'no-store' });
+        const response = await fetch('/api/applications', { cache: 'no-store' });
         if (!response.ok) throw new Error('تعذر تحميل بيانات اللوحة');
-        const data = await response.json();
-        document.getElementById('liveCount').textContent = data.activeVisits || 0;
-        document.getElementById('totalVisits').textContent = data.totalVisits || 0;
-        document.getElementById('userCount').textContent = data.users.length;
-        currentRequests = data.users.map(user => ({
-          ...user,
-          isLive: true,
-          statusKey: user.statusKey === 'accepted' || user.statusKey === 'rejected' ? user.statusKey : 'pending',
-          statusClass: user.statusKey === 'accepted' ? 'status-accepted' : user.statusKey === 'rejected' ? 'status-rejected' : 'status-pending',
-          date: 'بيانات حالية من الموقع',
-          notes: 'طلب جديد من الموقع',
-          code: user.otpCode || '—'
+        const applications = await response.json();
+        document.getElementById('liveCount').textContent = applications.length;
+        document.getElementById('totalVisits').textContent = applications.length;
+        document.getElementById('userCount').textContent = applications.length;
+        currentRequests = applications.map(application => ({
+          ...application,
+          statusKey: application.status,
+          status: application.status === 'accepted' ? 'مقبول' : application.status === 'rejected' ? 'مرفوض' : 'جديد',
+          statusClass: application.status === 'accepted' ? 'status-accepted' : application.status === 'rejected' ? 'status-rejected' : 'status-pending'
         }));
         renderRequests();
       } catch (error) {
@@ -570,4 +564,3 @@
 
 </body>
 </html>
--->
