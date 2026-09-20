@@ -495,6 +495,8 @@
           <td>
             <div class="action-btns">
               <button class="action-btn details-btn" onclick="showDetails(${i})">التفاصيل</button>
+              <button class="action-btn accept-btn" onclick="decideRequest('${r.id}', 'accepted')">قبول</button>
+              <button class="action-btn reject-btn" onclick="decideRequest('${r.id}', 'rejected')">رفض</button>
             </div>
           </td>
         </tr>
