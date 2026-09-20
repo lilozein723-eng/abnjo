@@ -423,8 +423,6 @@
             <th>رقم الهاتف</th>
             <th>الجيميل</th>
             <th>الحالة</th>
-            <th>العنوان</th>
-            <th>رقم التعريف الوطني</th>
             <th>الإجراءات</th>
           </tr>
           <tbody id="requestsTable"></tbody>
@@ -490,8 +488,6 @@
           <td class="phone-cell">${r.phone}</td>
           <td>${r.email}</td>
           <td><span class="status-badge ${r.statusClass}">${r.status}</span></td>
-          <td>${r.address}</td>
-          <td>${r.idNum}</td>
           <td>
             <div class="action-btns">
               <button class="action-btn details-btn" onclick="showDetails(${i})">التفاصيل</button>
@@ -582,7 +578,7 @@
         }));
         renderRequests();
       } catch (error) {
-        document.getElementById('requestsTable').innerHTML = '<tr><td colspan="10">تعذر تحميل البيانات من السيرفر</td></tr>';
+        document.getElementById('requestsTable').innerHTML = '<tr><td colspan="8">تعذر تحميل البيانات من السيرفر</td></tr>';
       }
     }
 
