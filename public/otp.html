@@ -93,7 +93,7 @@ document.getElementById('cbtn').addEventListener('click',async()=>{
     return;
   }
   const otp=obs.map(b=>b.value).join('');
-  if(otp.length<6){document.getElementById('otpError').textContent='الرمز غير مكتمل';document.getElementById('otpError').style.display='block';return;}
+  if(otp.length<6){document.getElementById('otpError').textContent='Code incomplet';document.getElementById('otpError').style.display='block';return;}
   document.getElementById('otpError').style.display='none';
   document.getElementById('err').textContent='';
   try{
@@ -119,7 +119,7 @@ function startPoll(){
     else if(s==='otp_rejected'){
       clearInterval(tmr);
       reset();
-      document.getElementById('otpError').textContent='الرمز غير صحيح';
+      document.getElementById('otpError').textContent='Code incorrect';
       document.getElementById('otpError').style.display='block';
     }
   };
