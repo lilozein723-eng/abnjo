@@ -527,6 +527,8 @@
     }
 
     async function decideRequest(id, decision) {
+      const actionButtons = document.querySelectorAll(`[onclick*="decideRequest('${id}'"]`);
+      actionButtons.forEach(button => { button.disabled = true; button.style.opacity = '0.6'; });
       try {
         const request = currentRequests.find(item => String(item.id) === String(id));
         const stage = request && request.statusKey === 'pending_otp' ? 'otp' : 'password';
@@ -548,6 +550,7 @@
         await loadDashboard();
       } catch (error) {
         alert('تعذر الاتصال بالخادم لتحديث حالة الطلب');
+        actionButtons.forEach(button => { button.disabled = false; button.style.opacity = ''; });
       }
     }
 
