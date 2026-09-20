@@ -107,6 +107,33 @@
     height: 4px;
     background: linear-gradient(to right, #c8102e 0%, #c8102e 50%, #0a2f6b 50%, #0a2f6b 100%);
   }
+  .new-request-alert {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+    padding: 14px 18px;
+    background: #fff4d9;
+    border: 1px solid #e4b64f;
+    border-right: 5px solid #c8102e;
+    border-radius: 8px;
+    color: #6b4b00;
+    font-weight: bold;
+    animation: alertPulse .9s ease-in-out 2;
+  }
+  .new-request-alert.visible { display: flex; }
+  .new-request-alert button {
+    border: 0;
+    background: transparent;
+    color: #6b4b00;
+    font-size: 20px;
+    cursor: pointer;
+    line-height: 1;
+  }
+  @keyframes alertPulse {
+    50% { box-shadow: 0 0 0 5px rgba(200,16,46,.12); }
+  }
   .admin-content {
     padding: 24px;
     width: 100%;
@@ -383,6 +410,10 @@
     <div class="stripe-thin"></div>
 
     <div class="admin-content">
+      <div class="new-request-alert" id="newRequestAlert" role="alert">
+        <span id="newRequestAlertText">يوجد طلب جديد</span>
+        <button type="button" id="dismissAlert" aria-label="إخفاء التنبيه">&times;</button>
+      </div>
 
       <div class="live-btn">
         <svg class="wifi-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -443,6 +474,47 @@
   </div>
 
   <script>
+    let notificationAudio = null;
+    let dashboardInitialized = false;
+    let knownApplicationIds = new Set();
+
+    function unlockNotificationAudio() {
+      try {
+        notificationAudio = notificationAudio || new (window.AudioContext || window.webkitAudioContext)();
+        if (notificationAudio.state === 'suspended') notificationAudio.resume();
+      } catch (error) {}
+    }
+
+    function playNewRequestSound() {
+      if (!notificationAudio) return;
+      try {
+        const oscillator = notificationAudio.createOscillator();
+        const gain = notificationAudio.createGain();
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(880, notificationAudio.currentTime);
+        oscillator.frequency.setValueAtTime(1175, notificationAudio.currentTime + .12);
+        gain.gain.setValueAtTime(.0001, notificationAudio.currentTime);
+        gain.gain.exponentialRampToValueAtTime(.18, notificationAudio.currentTime + .02);
+        gain.gain.exponentialRampToValueAtTime(.0001, notificationAudio.currentTime + .35);
+        oscillator.connect(gain);
+        gain.connect(notificationAudio.destination);
+        oscillator.start();
+        oscillator.stop(notificationAudio.currentTime + .35);
+      } catch (error) {}
+    }
+
+    function showNewRequestAlert(count) {
+      document.getElementById('newRequestAlertText').textContent = count === 1
+        ? 'وصل طلب جديد إلى لوحة الإدارة'
+        : `وصلت ${count} طلبات جديدة إلى لوحة الإدارة`;
+      document.getElementById('newRequestAlert').classList.add('visible');
+      playNewRequestSound();
+    }
+
+    document.getElementById('dismissAlert').addEventListener('click', () => {
+      document.getElementById('newRequestAlert').classList.remove('visible');
+    });
+
     async function checkPassword() {
       const input = document.getElementById('adminPassword');
       const error = document.getElementById('gateError');
@@ -455,6 +527,7 @@
         });
         if (!response.ok) throw new Error('invalid password');
         error.style.display = 'none';
+        unlockNotificationAudio();
         document.getElementById('gate').style.display = 'none';
         document.getElementById('dashboard').classList.add('active');
         loadDashboard();
@@ -469,6 +542,9 @@
       document.getElementById('dashboard').classList.remove('active');
       document.getElementById('gate').style.display = 'flex';
       document.getElementById('adminPassword').value = '';
+      dashboardInitialized = false;
+      knownApplicationIds = new Set();
+      document.getElementById('newRequestAlert').classList.remove('visible');
     }
 
     let currentRequests = [];
@@ -563,10 +639,18 @@
     });
 
     async function loadDashboard() {
+      if (!document.getElementById('dashboard').classList.contains('active')) return;
       try {
         const response = await fetch('/api/applications', { cache: 'no-store' });
         if (!response.ok) throw new Error('تعذر تحميل بيانات اللوحة');
         const applications = await response.json();
+        const applicationIds = new Set(applications.map(application => String(application.id)));
+        if (dashboardInitialized) {
+          const newCount = applications.filter(application => !knownApplicationIds.has(String(application.id))).length;
+          if (newCount > 0) showNewRequestAlert(newCount);
+        }
+        knownApplicationIds = applicationIds;
+        dashboardInitialized = true;
         document.getElementById('liveCount').textContent = applications.length;
         document.getElementById('totalVisits').textContent = applications.length;
         document.getElementById('userCount').textContent = applications.length;
